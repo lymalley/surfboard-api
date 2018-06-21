@@ -1,7 +1,7 @@
 require('dotenv').config()
 const { merge, map } = require('ramda')
+const pkGen = require('./lib/pkGen')
 const PouchDB = require('pouchdb-core')
-const pkGen = require('./lib/pk-gen')
 
 PouchDB.plugin(require('pouchdb-adapter-http'))
 
@@ -9,6 +9,12 @@ const db = new PouchDB(
   `${process.env.COUCH_HOSTNAME}${process.env.COUCH_DBNAME}`
 )
 
-const dal = {}
+const addBoard = (board, callback) => {
+  const modifiedBoard = merge(board, {
+    type: 'board',
+    _id: pkGen('board_', '-', prop('sku', 'board'))
+  })
+  db.put(modifiedBoard, callback)
+}
 
-module.exports = dal
+module.exports = { addBoard }
