@@ -22,8 +22,6 @@ app.get('/', function(req, res, next) {
   res.send(`Welcome to the surfboard api!`)
 })
 
-const paginate = pathOr(null, ['query', 'start_key'], req)
-
 app.get('/boards/:sku', function(req, res, next) {
   const boardID = `board_${req.params.sku}`
   getBoard(boardID, function(err, board) {
@@ -34,7 +32,20 @@ app.get('/boards/:sku', function(req, res, next) {
     res.status(200).send(board)
   })
 })
-/*
+
+app.get('/boards', (req, res, next) => {
+  const limit = Number(pathOr(2, ['query', 'limit'], req)) // "2" or 2
+
+  // /boards?limit=2&start_key=board_22221
+
+  // 1) do they want to paginate?
+  const paginate = pathOr(null, ['query', 'start_key'], req)
+
+  listBoards(limit, paginate)
+    .then(boards => res.status(200).send(boards))
+    .catch(err => next(new NodeHTTPError(err.status, err.message, err)))
+})
+
 app.get('/boards', function(req, res, next) {
   getAllBoards(function(err, boards) {
     if (err) {
@@ -44,8 +55,8 @@ app.get('/boards', function(req, res, next) {
     res.status(200).send(boards)
   })
 })
-*/
 
+/*
 app.get('/boards', function(req, res, next) {
   const limit = Number(pathOr(2, ['query', 'limit'], req))
   limitBoards(limit, function(err, boards) {
@@ -56,7 +67,7 @@ app.get('/boards', function(req, res, next) {
     res.status(200).send(boards)
   })
 })
-
+*/
 /*
 
 app.get('/boards', function(req, res, next) {
@@ -66,7 +77,7 @@ app.get('/boards', function(req, res, next) {
     .catch(err => next(new NodeHTTPError(err.status, err.message, err)))
 })
 
-/*
+
 
 */
 

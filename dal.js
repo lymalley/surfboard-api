@@ -24,11 +24,13 @@ const deleteBoard = (id, callback) => {
 }
 //this function is getting the required rev and id by providing only the sku
 const getBoard = (id, callback) => db.get(id, callback)
+
 const getAllBoards = callback =>
   listAllDocs(
     { include_docs: true, startkey: 'board_', endkey: 'board_\ufff0' },
     callback
   )
+
 /*
 const getLimitBoards = callback =>
   limitDocs(
