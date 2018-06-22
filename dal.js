@@ -1,5 +1,5 @@
 require('dotenv').config()
-const { merge, map } = require('ramda')
+const { merge, map, prop } = require('ramda')
 const pkGen = require('./lib/pkGen')
 const PouchDB = require('pouchdb-core')
 
@@ -12,10 +12,12 @@ const db = new PouchDB(
 const addBoard = (board, callback) => {
   const modifiedBoard = merge(board, {
     type: 'board',
-    _id: pkGen('board_', '-', prop('sku', 'board'))
+    _id: pkGen('board_', '-', prop('sku', board))
   })
   db.put(modifiedBoard, callback)
 }
 const updateBoard = (board, callback) => db.put(board, callback)
+const deleteBoard = (board, callback) => db.remove(board, callback)
+const getBoard = (id, callback) => db.get(id, callback)
 
-module.exports = { addBoard, updateBoard }
+module.exports = { addBoard, updateBoard, deleteBoard, getBoard }

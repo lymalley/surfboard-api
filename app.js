@@ -1,12 +1,12 @@
 require('dotenv').config()
 const express = require('express')
 const app = express()
-const port = process.env.PORT || 5000
+const port = process.env.PORT || 5555
 const bodyParser = require('body-parser')
 const requiredFieldChecker = require('./lib/required-field-checker')
-const { addBoard, updateBoard } = require('./dal')
+const { addBoard, updateBoard, deleteBoard, getBoard } = require('./dal')
 const NodeHTTPError = require('node-http-error')
-const { propOr, isEmpty, not, compose } = require('ramda')
+const { propOr, isEmpty, not, compose, join } = require('ramda')
 const createMissingFieldsMsg = require('./lib/create-missing-fields-msg')
 
 app.use(bodyParser.json())
@@ -15,35 +15,43 @@ app.get('/', function(req, res, next) {
   res.send(`Welcome to the surfboard api!`)
 })
 
-app.get('/boards/:boardID', function(req, res, next) {
-  const surfboardID = req.params.boardID
-})
+//})
 
-app.post('/boards', function(req, res, next) {
+app.post('/boards', (req, res, next) => {
   const newBoard = propOr({}, 'body', req)
 
   if (isEmpty(newBoard)) {
-    next(new NodeHTTPError(400, 'missing surfboard body.'))
-    return
+    next(
+      new NodeHTTPError(
+        400,
+        'Brah, add a board to the request body.  Ensure the Content-Type is application/json. Dude!'
+      )
+    )
   }
+
   const missingFields = requiredFieldChecker(
     ['name', 'category', 'price', 'sku'],
     newBoard
   )
+
   const sendMissingFieldError = compose(
     not,
     isEmpty
   )(missingFields)
+
   if (sendMissingFieldError) {
     next(
       new NodeHTTPError(
         400,
-        `You're missing required fields: ${join(', ', missingFields)}`,
-        { ...err }
+        `Brah, you didnt pass all the required fields: ${join(
+          ', ',
+          missingFields
+        )}`,
+        { josh: 'is Cool and humble', jp: 'is Cool' }
       )
     )
-    return
   }
+
   addBoard(newBoard, function(err, result) {
     if (err)
       next(
@@ -53,26 +61,43 @@ app.post('/boards', function(req, res, next) {
   })
 })
 
-app.put('./boards/:boardSku', function(res, req, next) {
-  const boardSku = req.params.sku
-  const board = req.body
-  if (isEmpty(instrument)) {
-    next(new NodeHTTPError(400, 'board body is missing'))
-    return
+app.put('/boards/:sku', function(req, res, next) {
+  const updatedBoard = propOr({}, 'body', req)
+
+  if (isEmpty(updatedBoard)) {
+    next(
+      new NodeHTTPError(
+        400,
+        'Brah, add a board to the request body.  Ensure the Content-Type is application/json. Dude!'
+      )
+    )
   }
+
   const missingFields = requiredFieldChecker(
-    ['_id', '_rev', 'type', 'name', 'category', 'price', 'sku'],
-    board
+    ['_id', '_rev', 'name', 'category', 'price', 'sku'],
+    updatedBoard
   )
-  if (not(isEmpty(missingFields))) {
-    next(new NodeHTTPError(400, '${createMissingFieldsMsg(missingFields)}'))
+
+  const sendMissingFieldError = compose(
+    not,
+    isEmpty
+  )(missingFields)
+
+  if (sendMissingFieldError) {
+    next(
+      new NodeHTTPError(
+        400,
+        `Brah, you didnt pass all the required fields: ${join(
+          ', ',
+          missingFields
+        )}`
+      )
+    )
   }
-  updateBoard(board, function(err, board) {
-    if (err) {
-      next(new NodeHTTPError(err.status, err.message, err))
-      return
-    }
-    res.status(200).send(board)
+
+  updateBoard(updatedBoard, function(err, result) {
+    if (err) next(new NodeHTTPError(err.status, err.message))
+    res.status(200).send(result)
   })
 })
 
@@ -84,7 +109,7 @@ app.use(function(err, req, res, next) {
     null,
     2)}`
   )
-  res.status(err.status || 5000).send(err.message)
+  res.status(err.status || 500).send(err.message)
 })
 
 app.listen(port, () => console.log('Surfboards, Brah!', port))
