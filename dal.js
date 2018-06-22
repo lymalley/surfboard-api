@@ -19,7 +19,7 @@ const addBoard = (board, callback) => {
 const updateBoard = (board, callback) => db.put(board, callback)
 const deleteBoard = (id, callback) => {
   db.get(id, function(err, board) {
-    db.remove(err, board)
+    db.remove(board, callback)
   })
 }
 //this function is getting the required rev and id by providing only the sku

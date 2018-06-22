@@ -26,6 +26,16 @@ app.get('/boards/:sku', function(req, res, next) {
   })
 })
 
+app.delete('/boards/:sku', (req, res, next) =>
+  deleteBoard(`board_${req.params.sku}`, function(err, data) {
+    if (err) {
+      next(new NodeHTTPError(err.status, err.message, err))
+    }
+    res.status(200).send(data)
+  })
+)
+//if delete a document, you need to have an id and rev
+
 app.post('/boards', (req, res, next) => {
   const newBoard = propOr({}, 'body', req)
 
