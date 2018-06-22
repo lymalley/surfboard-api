@@ -6,7 +6,7 @@ const bodyParser = require('body-parser')
 const requiredFieldChecker = require('./lib/required-field-checker')
 const { addBoard, updateBoard, deleteBoard, getBoard } = require('./dal')
 const NodeHTTPError = require('node-http-error')
-const { propOr, isEmpty, not, compose, join } = require('ramda')
+const { propOr, isEmpty, not, compose, join, propEq } = require('ramda')
 const createMissingFieldsMsg = require('./lib/create-missing-fields-msg')
 
 app.use(bodyParser.json())
@@ -15,7 +15,16 @@ app.get('/', function(req, res, next) {
   res.send(`Welcome to the surfboard api!`)
 })
 
-//})
+app.get('/boards/:sku', function(req, res, next) {
+  const boardID = `board_${req.params.sku}`
+  getBoard(boardID, function(err, board) {
+    if (err) {
+      next(new NodeHTTPError(err.status, err.message, err))
+      return
+    }
+    res.status(200).send(board)
+  })
+})
 
 app.post('/boards', (req, res, next) => {
   const newBoard = propOr({}, 'body', req)

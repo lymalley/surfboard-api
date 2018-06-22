@@ -17,7 +17,12 @@ const addBoard = (board, callback) => {
   db.put(modifiedBoard, callback)
 }
 const updateBoard = (board, callback) => db.put(board, callback)
-const deleteBoard = (board, callback) => db.remove(board, callback)
+const deleteBoard = (id, callback) => {
+  db.get(id, function(err, board) {
+    db.remove(err, board)
+  })
+}
+//this function is getting the required rev and id by providing only the sku
 const getBoard = (id, callback) => db.get(id, callback)
 
 module.exports = { addBoard, updateBoard, deleteBoard, getBoard }
