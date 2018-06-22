@@ -16,5 +16,6 @@ const addBoard = (board, callback) => {
   })
   db.put(modifiedBoard, callback)
 }
+const updateBoard = (board, callback) => db.put(board, callback)
 
-module.exports = { addBoard }
+module.exports = { addBoard, updateBoard }

@@ -4,9 +4,10 @@ const app = express()
 const port = process.env.PORT || 5000
 const bodyParser = require('body-parser')
 const requiredFieldChecker = require('./lib/required-field-checker')
-const { addBoard } = require('./dal')
+const { addBoard, updateBoard } = require('./dal')
 const NodeHTTPError = require('node-http-error')
 const { propOr, isEmpty, not, compose } = require('ramda')
+const createMissingFieldsMsg = require('./lib/create-missing-fields-msg')
 
 app.use(bodyParser.json())
 
@@ -25,39 +26,56 @@ app.post('/boards', function(req, res, next) {
     next(new NodeHTTPError(400, 'missing surfboard body.'))
     return
   }
+  const missingFields = requiredFieldChecker(
+    ['name', 'category', 'price', 'sku'],
+    newBoard
+  )
   const sendMissingFieldError = compose(
     not,
     isEmpty
   )(missingFields)
   if (sendMissingFieldError) {
-    addBoard(newBoard, function(err, result) {
-      if (err) next(new NodeHTTPError(err.status, err.message, { ...err }))
-      return
-    })
-    res.status(201).send(results)
-  }
-})
-
-/*
-
-
-  console.log('not isEmpty missingFeilds', not(isEmpty(missingFields)))
-  if (not(isEmpty(missingFields))) {
-    next(new NodeHTTPError(400, `missing field(s) in body`))
+    next(
+      new NodeHTTPError(
+        400,
+        `You're missing required fields: ${join(', ', missingFields)}`,
+        { ...err }
+      )
+    )
     return
   }
-
-
-  addInstrument(newInstrument, function(err, data) {
-    if (err) {
+  addBoard(newBoard, function(err, result) {
+    if (err)
       next(
-        new NodeHTTPError(err.status, err.message)
+        new NodeHTTPError(err.status, err.message, { ...err, max: 'isCool' })
       )
-    }
-    res.status(201).send(boards)
+    res.status(201).send(result)
   })
 })
-*/
+
+app.put('./boards/:boardSku', function(res, req, next) {
+  const boardSku = req.params.sku
+  const board = req.body
+  if (isEmpty(instrument)) {
+    next(new NodeHTTPError(400, 'board body is missing'))
+    return
+  }
+  const missingFields = requiredFieldChecker(
+    ['_id', '_rev', 'type', 'name', 'category', 'price', 'sku'],
+    board
+  )
+  if (not(isEmpty(missingFields))) {
+    next(new NodeHTTPError(400, '${createMissingFieldsMsg(missingFields)}'))
+  }
+  updateBoard(board, function(err, board) {
+    if (err) {
+      next(new NodeHTTPError(err.status, err.message, err))
+      return
+    }
+    res.status(200).send(board)
+  })
+})
+
 app.use(function(err, req, res, next) {
   console.log(
     `WIPEOUT! \n\nMETHOD ${req.method} \nPATH ${req.path}\n${(JSON.stringify(
