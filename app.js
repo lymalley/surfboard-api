@@ -4,7 +4,13 @@ const app = express()
 const port = process.env.PORT || 5555
 const bodyParser = require('body-parser')
 const requiredFieldChecker = require('./lib/required-field-checker')
-const { addBoard, updateBoard, deleteBoard, getBoard } = require('./dal')
+const {
+  addBoard,
+  updateBoard,
+  deleteBoard,
+  getBoard,
+  getAllBoards
+} = require('./dal')
 const NodeHTTPError = require('node-http-error')
 const { propOr, isEmpty, not, compose, join, propEq } = require('ramda')
 const createMissingFieldsMsg = require('./lib/create-missing-fields-msg')
@@ -23,6 +29,16 @@ app.get('/boards/:sku', function(req, res, next) {
       return
     }
     res.status(200).send(board)
+  })
+})
+
+app.get('/boards', function(req, res, next) {
+  getAllBoards(function(err, boards) {
+    if (err) {
+      next(new NodeHTTPError(err.status, err.message, err))
+      return
+    }
+    res.status(200).send(boards)
   })
 })
 
