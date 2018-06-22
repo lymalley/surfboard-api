@@ -1,5 +1,5 @@
 require('dotenv').config()
-const { merge, map, prop } = require('ramda')
+const { merge, map, prop, pathOr } = require('ramda')
 const pkGen = require('./lib/pkGen')
 const PouchDB = require('pouchdb-core')
 
@@ -29,6 +29,28 @@ const getAllBoards = callback =>
     { include_docs: true, startkey: 'board_', endkey: 'board_\ufff0' },
     callback
   )
+/*
+const getLimitBoards = callback =>
+  limitDocs(
+    { include_docs: true, startkey: 'board_', endkey: '?limit=${Number}' },
+    callback
+  )
+
+const limitBoards = limit =>
+  db
+    .allDocs({ include_docs: true, limit })
+    .then(response => map(prop('doc'), response.rows))
+*/
+
+const listBoards = (limit, paginate) =>
+  //paginate === null or boards_14232
+  db
+    .allDocs(
+      paginate
+        ? { include_docs: true, limit, start_key: `${paginate}${'\ufff0'}` }
+        : { include_docs: true, limit }
+    )
+    .then(response => map(prop('doc'), response.rows))
 
 const listAllDocs = (id, callback) =>
   db.allDocs(id, function(err, boards) {
@@ -36,4 +58,11 @@ const listAllDocs = (id, callback) =>
     callback(null, map(row => row.doc, boards.rows))
   })
 
-module.exports = { addBoard, updateBoard, deleteBoard, getBoard, getAllBoards }
+module.exports = {
+  addBoard,
+  updateBoard,
+  deleteBoard,
+  getBoard,
+  getAllBoards,
+  listBoards
+}

@@ -9,10 +9,11 @@ const {
   updateBoard,
   deleteBoard,
   getBoard,
-  getAllBoards
+  getAllBoards,
+  listBoards
 } = require('./dal')
 const NodeHTTPError = require('node-http-error')
-const { propOr, isEmpty, not, compose, join, propEq } = require('ramda')
+const { propOr, isEmpty, not, compose, join, propEq, pathOr } = require('ramda')
 const createMissingFieldsMsg = require('./lib/create-missing-fields-msg')
 
 app.use(bodyParser.json())
@@ -20,6 +21,8 @@ app.use(bodyParser.json())
 app.get('/', function(req, res, next) {
   res.send(`Welcome to the surfboard api!`)
 })
+
+const paginate = pathOr(null, ['query', 'start_key'], req)
 
 app.get('/boards/:sku', function(req, res, next) {
   const boardID = `board_${req.params.sku}`
@@ -31,7 +34,7 @@ app.get('/boards/:sku', function(req, res, next) {
     res.status(200).send(board)
   })
 })
-
+/*
 app.get('/boards', function(req, res, next) {
   getAllBoards(function(err, boards) {
     if (err) {
@@ -41,6 +44,31 @@ app.get('/boards', function(req, res, next) {
     res.status(200).send(boards)
   })
 })
+*/
+
+app.get('/boards', function(req, res, next) {
+  const limit = Number(pathOr(2, ['query', 'limit'], req))
+  limitBoards(limit, function(err, boards) {
+    if (err) {
+      next(new NodeHTTPError(err.status, err.message, err))
+      return
+    }
+    res.status(200).send(boards)
+  })
+})
+
+/*
+
+app.get('/boards', function(req, res, next) {
+  const limit = Number(pathOr(10, ['query', 'limit'], req))
+  limitBoards(limit)
+    .then(res.status(200).send()
+    .catch(err => next(new NodeHTTPError(err.status, err.message, err)))
+})
+
+/*
+
+*/
 
 app.delete('/boards/:sku', (req, res, next) =>
   deleteBoard(`board_${req.params.sku}`, function(err, data) {
